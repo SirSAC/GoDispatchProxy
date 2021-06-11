@@ -66,6 +66,7 @@ func handle_pipe(source_packet Conn, destination_packet Conn, buffer_size int, k
 	buffer_destination := bufio.NewWriterSize(destination_packet, buffer_size)
 	_, err := io.CopyBuffer(buffer_destination, buffer_source, buffer_packet)
 	if err != nil {
+		defer buffer_destination.Flush()
 		runtime.Goexit()
 	}
 }
@@ -264,8 +265,10 @@ func main() {
 		sync_mutex = &Mutex {}
 	}
 	timeout_verify, _ := time.ParseDuration("500ms")
+	timeout_check, _ := time.ParseDuration("250ms")
 	network_dialer.LocalAddr = nil
 	network_dialer.Timeout = timeout_verify
+	network_dialer.FallbackDelay = timeout_check
 	network_dialer.DualStack = true
 	for {
 		local_connection, _ := local_host.Accept()
